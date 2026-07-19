@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero" style="text-align: center; padding: 4rem 1rem;">
+    <h1 style="font-size: 3.5rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.5rem;">Regional Logistics, <br> Simplified.</h1>
+    <p style="font-size: 1.25rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 3rem;">Fast, reliable, and secure regional road cargo booking and tracking solutions.</p>
+    <div style="display: flex; justify-content: center; gap: 1rem;">
+        <a href="/book" class="btn btn-primary">Book Now</a>
+        <a href="/track" class="btn btn-secondary">Track Cargo</a>
+    </div>
+</div>
+
+<div class="card-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+    <div class="card">
+        <div class="card-body">
+            <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🚀 Fast Shipping</h2>
+            <p style="color: var(--text-muted);">We ensure your cargo reaches its destination in record time with our optimized routing.</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🛡️ Secure Handling</h2>
+            <p style="color: var(--text-muted);">State-of-the-art security protocols to keep your valuable shipments safe.</p>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🚚 Regional Reach</h2>
+            <p style="color: var(--text-muted);">Connecting key cities across the state with efficient and reliable road transport.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Shipment - CargoFlow{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 0 auto;">
+    <div class="card-header">
+        <h2 style="text-align: center;">Track Your Shipment</h2>
+    </div>
+    <div class="card-body">
+        <p style="text-align: center; margin-bottom: 2rem; color: var(--text-muted);">Enter your unique tracking ID to
+            see the current status of your cargo.</p>
+        <form method="POST" autocomplete="off">
+            <div class="form-group">
+                <label>Tracking ID</label>
+                <input name="tracking_id" required placeholder="Enter Tracking ID">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Track Package</button>
+        </form>
+
+        {% if error %}
+        <div class="alert alert-error" style="margin-top: 1.5rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

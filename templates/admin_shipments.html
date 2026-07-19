@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin - Shipments{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Shipment Management</h1>
+    <div style="display: flex; gap: 1rem;">
+        <form action="/admin/shipments" method="GET" style="display: flex; gap: 0.5rem;" autocomplete="off">
+            <input name="search" value="{{ search }}" placeholder="Search Tracking ID..." style="width: 200px;">
+            <select name="status" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="Booked" {% if status_filter=='Booked' %}selected{% endif %}>Booked</option>
+                <option value="Assigned" {% if status_filter=='Assigned' %}selected{% endif %}>Assigned</option>
+                <option value="Shipped" {% if status_filter=='Shipped' %}selected{% endif %}>Shipped</option>
+                <option value="In Transit" {% if status_filter=='In Transit' %}selected{% endif %}>In Transit</option>
+                <option value="Delivered" {% if status_filter=='Delivered' %}selected{% endif %}>Delivered</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Search</button>
+            <a href="/admin/shipments" class="btn btn-secondary btn-sm">Reset</a>
+        </form>
+        <form action="/admin/clear_delivered" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to clear ALL delivered shipments from the system?');">
+            <button type="submit" class="btn btn-sm" style="background: #dc3545; color: white;">Clear Delivered</button>
+        </form>
+    </div>
+</div>
+
+{# Flash messages are handled in base.html #}
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Tracking ID</th>
+                <th>Sender / Receiver</th>
+                <th>Route</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Resource</th>
+                <th>Live Location</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for shipment in shipments %}
+            <tr>
+                <td><strong>{{ shipment.tracking_id }}</strong></td>
+                <td>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">S: {{ shipment.sender }}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">R: {{ shipment.receiver }}</div>
+                </td>
+                <td>{{ shipment.origin }} &rarr; {{ shipment.destination }}</td>
+                    <span
+                        class="badge {% if shipment.status == 'Delivered' %}badge-success{% elif shipment.status == 'Assigned' %}badge-warning{% elif shipment.status == 'Booked' %}badge-info{% else %}badge-pending{% endif %}">
+                        {{ shipment.status }}
+                    </span>
+                </td>
+                <td>
+                    <span
+                        class="badge {% if shipment.payment_status == 'Received' %}badge-success{% else %}badge-warning{% endif %}">
+                        {{ shipment.payment_status or 'Pending' }}
+                    </span>
+                </td>
+                <td>
+                    <div style="font-size: 0.8rem;">D: {{ shipment.driver.name if shipment.driver else '-' }}</div>
+                    <div style="font-size: 0.8rem;">V: {{ shipment.vehicle.model if shipment.vehicle else '-' }}</div>
+                </td>
+                <td>
+                    <div id="live-location-{{ shipment.id }}"
+                        style="font-size: 0.8rem; color: var(--primary); font-weight: 500;">
+                        {% if shipment.driver and shipment.driver.lat %}
+                        Fetching...
+                        {% else %}
+                        -
+                        {% endif %}
+                    </div>
+                </td>
+                <td>{{ shipment.date }}</td>
+                <td>
+                    <div style="display: flex; gap: 0.25rem;">
+                        <button class="btn btn-secondary btn-sm"
+                            onclick="openUpdateModal('{{ shipment.id }}', '{{ shipment.status }}', '{{ shipment.driver_id }}', '{{ shipment.vehicle_id }}')">
+                            Edit
+                        </button>
+                        <button class="btn btn-primary btn-sm"
+                            onclick="openTrackingModal('{{ shipment.id }}', '{{ shipment.tracking_id }}')">
+                            + Info
+                        </button>
+                        {% if shipment.status == 'Delivered' %}
+                        <form action="/admin/delete_shipment/{{ shipment.id }}" method="POST" style="margin: 0; display: inline;">
+                            <button type="submit" class="btn btn-sm" style="background: #dc3545; color: white;" onclick="return confirm('Are you sure you want to clear this shipment?');">Clear</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">No shipments found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="{{ url_for('admin_shipments', page=page-1, status=status_filter, search=search) }}"
+        class="btn btn-secondary btn-sm">&larr; Prev</a>
+    {% endif %}
+    <span style="display: flex; align-items: center; padding: 0 1rem; font-size: 0.9rem;">Page {{ page }} of {{
+        total_pages }}</span>
+    {% if page < total_pages %} <a
+        href="{{ url_for('admin_shipments', page=page+1, status=status_filter, search=search) }}"
+        class="btn btn-secondary btn-sm">Next &rarr;</a>
+        {% endif %}
+</div>
+{% endif %}
+
+<!-- Add Tracking Update Modal -->
+<div id="trackingModal" class="modal-overlay">
+    <div class="modal">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="tracking_modal_title">Add Tracking Update</h3>
+            <button onclick="closeTrackingModal()"
+                style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+        </div>
+        <div class="card-body">
+            <form action="/admin/add_tracking_update" method="POST" autocomplete="off">
+                <input type="hidden" name="booking_id" id="tracking_booking_id">
+                <div class="form-group">
+                    <label>Current Status</label>
+                    <select name="status">
+                        <option value="Booked">Booked</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Location (City, Country)</label>
+                    <input type="text" name="location" placeholder="Enter current location" required>
+                </div>
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea name="notes" placeholder="Additional details..." rows="3"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary btn-block"
+                        onclick="closeTrackingModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-block">Add Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Modal -->
+<div id="updateModal" class="modal-overlay">
+    <div class="modal">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Update Shipment</h3>
+            <button onclick="closeModal()"
+                style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+        </div>
+        <div class="card-body">
+            <form id="updateShipmentForm" autocomplete="off">
+                <input type="hidden" name="shipment_id" id="modal_shipment_id">
+                <div id="modal_message"
+                    style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 4px; display: none;"></div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status" id="modal_status">
+                        <option value="Booked">Booked</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assign Driver</label>
+                    <select name="driver_id" id="modal_driver">
+                        <option value="">None</option>
+                        {% for driver in drivers %}
+                        <option value="{{ driver.id }}">{{ driver.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Assign Vehicle</label>
+                    <select name="vehicle_id" id="modal_vehicle">
+                        <option value="">None</option>
+                        {% for vehicle in vehicles %}
+                        <option value="{{ vehicle.id }}">{{ vehicle.model }} ({{ vehicle.plate_number }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary btn-block" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // AJAX Form Submission
+    document.getElementById('updateShipmentForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const messageDiv = document.getElementById('modal_message');
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Saving...';
+
+        fetch('/admin/update_shipment', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                messageDiv.style.display = 'block';
+                messageDiv.innerText = data.message;
+
+                if (data.status === 'success') {
+                    messageDiv.style.backgroundColor = '#d4edda';
+                    messageDiv.style.color = '#155724';
+                    messageDiv.style.border = '1px solid #c3e6cb';
+
+                    // Reload page after 1.5 seconds to show changes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    messageDiv.style.backgroundColor = '#f8d7da';
+                    messageDiv.style.color = '#721c24';
+                    messageDiv.style.border = '1px solid #f5c6cb';
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Save Changes';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageDiv.style.display = 'block';
+                messageDiv.innerText = 'An unexpected error occurred.';
+                messageDiv.style.backgroundColor = '#f8d7da';
+                messageDiv.style.color = '#721c24';
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Save Changes';
+            });
+    });
+
+    function openUpdateModal(id, status, driverId, vehicleId) {
+        // Reset message
+        const messageDiv = document.getElementById('modal_message');
+        messageDiv.style.display = 'none';
+        messageDiv.innerText = '';
+
+        document.getElementById('modal_shipment_id').value = id;
+        document.getElementById('modal_status').value = status;
+        document.getElementById('modal_driver').value = driverId || "";
+        document.getElementById('modal_vehicle').value = vehicleId || "";
+        document.getElementById('updateModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('updateModal').classList.remove('active');
+    }
+
+    function openTrackingModal(id, trackingId) {
+        document.getElementById('tracking_booking_id').value = id;
+        document.getElementById('tracking_modal_title').innerText = "Add Tracking: " + trackingId;
+        document.getElementById('trackingModal').classList.add('active');
+    }
+
+    function closeTrackingModal() {
+        document.getElementById('trackingModal').classList.remove('active');
+    }
+
+    // Close on click outside
+    window.onclick = function (event) {
+        let updateModal = document.getElementById('updateModal');
+        let trackingModal = document.getElementById('trackingModal');
+        if (event.target == updateModal) {
+            closeModal();
+        }
+        if (event.target == trackingModal) {
+            closeTrackingModal();
+        }
+    }
+
+    // Live Location Polling
+    function pollLocations() {
+        const locations = document.querySelectorAll('[id^="live-location-"]');
+        locations.forEach(div => {
+            const id = div.id.replace('live-location-', '');
+            if (div.innerText !== '-') {
+                fetch(`/api/get_location/${id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            div.innerText = data.formatted;
+                        }
+                    })
+                    .catch(err => console.error("Polling error:", err));
+            }
+        });
+    }
+
+    // Initial poll and set interval every 10s
+    pollLocations();
+    setInterval(pollLocations, 10000);
+</script>
+{% endblock %}

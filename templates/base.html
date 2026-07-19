@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cargo System{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="nav-brand">CargoFlow</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            {% if session.get('user_id') %}
+            <a href="/book">Book</a>
+            <a href="/track">Track</a>
+            <a href="/my-shipments">My Shipments</a>
+            {% else %}
+            <a href="/retrieve-tracking">Find ID</a>
+            {% endif %}
+
+            {% if session.get('role') == 'admin' %}
+            <div style="width: 1px; height: 1.5rem; background: var(--border); margin: 0 0.5rem;"></div>
+            <a href="/admin/shipments">Shipments</a>
+            <a href="/admin/drivers">Drivers</a>
+            <a href="/admin/vehicles">Vehicles</a>
+            <a href="/admin/analytics">Analytics</a>
+            {% endif %}
+        </div>
+        <div class="nav-auth">
+            {% if session.get('user_id') %}
+            <span class="user-greeting">Hi, {{ session.get('username') }}</span>
+            <a href="/logout" class="btn btn-sm btn-secondary">Logout</a>
+            {% else %}
+            <a href="/login" class="nav-auth-link">Login</a>
+            <a href="/register" class="btn btn-sm btn-primary">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 CargoFlow Systems. All rights reserved.</p>
+    </footer>
+</body>
+
+</html>

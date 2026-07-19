@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed - CargoFlow{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; max-width: 600px; margin: 4rem auto;">
+    <div class="card-body">
+        <div style="font-size: 4rem; color: var(--success); margin-bottom: 1rem;">🎉</div>
+        <h2 style="margin-bottom: 1rem;">Booking Confirmed!</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Your shipment has been successfully booked. Please
+            save your tracking ID for future reference.</p>
+
+        <div
+            style="font-family: monospace; font-size: 2rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 0.5rem; margin: 2rem 0; letter-spacing: 2px; color: var(--secondary);">
+            {{ tracking_id }}
+        </div>
+
+        <div
+            style="margin: 2rem 0; padding: 1.5rem; border: 1px dashed var(--border); border-radius: 0.5rem; background: rgba(255,255,255,0.02);">
+            <div style="margin-bottom: 0.5rem; color: var(--text-muted);">Estimated Payment Amount</div>
+            <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary); margin-bottom: 1rem;">₹{{
+                "%.2f"|format(cost) }}</div>
+            <div style="font-size: 0.9rem;">
+                <strong>Payment Status:</strong>
+                <span style="color: var(--warning);">Pending</span>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 1rem;">
+            <a href="/" class="btn btn-secondary">Back to Home</a>
+            <a href="/my-shipments" class="btn btn-primary">View My Shipments</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

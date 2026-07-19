@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Tracking Status - CargoFlow{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 0 auto; text-align: center;">
+    <div class="card-header">
+        <h3>Tracking ID: {{ tracking_id }}</h3>
+    </div>
+    <div class="card-body">
+        <div style="margin: 2rem 0;">
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem;">Current Status</div>
+            <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">{{ status }}</div>
+            <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 1rem;">Cash Status: <strong style="color: {% if payment_status == 'Received' %}var(--success){% else %}var(--primary){% endif %};">{{ payment_status or 'Pending' }}</strong></div>
+        </div>
+
+        <div id="live-tracking"
+            style="margin: -1rem 0 2rem 0; padding: 1rem; background: rgba(99, 102, 241, 0.05); border-radius: 12px; border: 1px dashed var(--primary); display: none;">
+            <div
+                style="font-size: 0.75rem; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">
+                Live Location</div>
+            <div id="live-coords" style="font-size: 1rem; font-weight: 500;">Fetching live GPS...</div>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <!-- Simple Progress Visual -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.75rem;">
+                <span
+                    style="color: {% if status != 'Cancelled' %}var(--success){% else %}var(--text-muted){% endif %};">Booked</span>
+                <span
+                    style="color: {% if status in ['Shipped', 'In Transit', 'Delivered'] %}var(--success){% else %}var(--text-muted){% endif %};">Shipped</span>
+                <span
+                    style="color: {% if status in ['In Transit', 'Delivered'] %}var(--success){% else %}var(--text-muted){% endif %};">In
+                    Transit</span>
+                <span
+                    style="color: {% if status == 'Delivered' %}var(--success){% else %}var(--text-muted){% endif %};">Delivered</span>
+            </div>
+            <div style="height: 6px; background: rgba(0,0,0,0.2); border-radius: 3px; overflow: hidden; display: flex;">
+                <div
+                    style="height: 100%; width: 25%; background: {% if status != 'Cancelled' %}var(--success){% else %}var(--text-muted){% endif %}; border-right: 1px solid var(--bg-card);">
+                </div>
+                <div
+                    style="height: 100%; width: 25%; background: {% if status in ['Shipped', 'In Transit', 'Delivered'] %}var(--success){% else %}var(--bg-dark){% endif %}; border-right: 1px solid var(--bg-card);">
+                </div>
+                <div
+                    style="height: 100%; width: 25%; background: {% if status in ['In Transit', 'Delivered'] %}var(--success){% else %}var(--bg-dark){% endif %}; border-right: 1px solid var(--bg-card);">
+                </div>
+                <div
+                    style="height: 100%; width: 25%; background: {% if status == 'Delivered' %}var(--success){% else %}var(--bg-dark){% endif %};">
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline-container" style="margin-top: 3rem; text-align: left;">
+            <h4 style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Shipment
+                Journey</h4>
+            <div class="timeline">
+                {% for entry in history %}
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                            <span style="font-weight: 600; color: var(--text-main);">{{ entry.status }}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ entry.time }}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--primary); margin: 0.25rem 0;">{{ entry.location }}
+                        </div>
+                        {% if entry.notes %}
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">{{ entry.notes }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">No history records available
+                    yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="/track" class="btn btn-secondary btn-block">Track Another</a>
+            <a href="/" class="btn btn-primary btn-block">Home</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0.5rem;
+        bottom: 1rem;
+        width: 2px;
+        background: var(--border);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 2px solid var(--bg-card);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        z-index: 1;
+    }
+
+    .timeline-item:first-child .timeline-dot {
+        background: var(--success);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+
+    .timeline-content {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border);
+    }
+</style>
+
+<script>
+    function pollLiveLocation() {
+        // We'll need the shipment's database ID. We can pass it or use tracking_id if the API supports it.
+        // My API uses booking_id. I'll need to pass 'booking_id' from the route.
+        const bookingId = "{{ booking_id }}";
+        if (!bookingId) return;
+
+        fetch(`/api/get_location/${bookingId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('live-tracking').style.display = 'block';
+                    document.getElementById('live-coords').innerText = data.formatted;
+                }
+            })
+            .catch(err => console.error("Live tracking error:", err));
+    }
+
+    // Only start polling if status is not 'Delivered' or 'Cancelled'
+    const currentStatus = "{{ status }}";
+    if (currentStatus !== 'Delivered' && currentStatus !== 'Cancelled') {
+        pollLiveLocation();
+        setInterval(pollLiveLocation, 10000);
+    }
+</script>
+{% endblock %}

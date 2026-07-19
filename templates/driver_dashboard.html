@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard - Cargo Express</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+            color: var(--text);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 800px;
+            backdrop-filter: blur(12px);
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-weight: 600;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .driver-info {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .shipment-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .shipment-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .shipment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .tracking-id {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .status-badge {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .shipment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-label {
+            color: #64748b;
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .update-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .update-btn:hover {
+            opacity: 0.9;
+        }
+
+        .update-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            background: var(--success);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        #logout-link {
+            color: #64748b;
+            text-decoration: none;
+            display: block;
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <h1>Driver Dashboard</h1>
+        <p class="driver-info">Welcome, {{ driver.name }} | Assigned to: {{ driver.license_number }}</p>
+
+        {% if shipments %}
+        {% for shipment in shipments %}
+        <div class="shipment-card">
+            <div class="shipment-header">
+                <span class="tracking-id">#{{ shipment.tracking_id }}</span>
+                <span class="status-badge">{{ shipment.status }}</span>
+            </div>
+            <div class="shipment-details">
+                <div>
+                    <span class="detail-label">Pickup Location</span>
+                    {{ shipment.origin }}
+                </div>
+                <div>
+                    <span class="detail-label">Drop-off Location</span>
+                    {{ shipment.destination }}
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <button class="update-btn" data-id="{{ shipment.id }}"
+                    onclick="updateLocation({{ shipment.id }}, this)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    Update Current Location
+                </button>
+
+                {% if shipment.status == 'In Transit' %}
+                <button class="complete-btn" onclick="completeDelivery({{ shipment.id }}, this)"
+                    style="background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; transition: all 0.3s ease;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Mark as Delivered
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="text-align: center; color: #64748b; padding: 2rem;">No shipments assigned to you today.</p>
+        {% endif %}
+
+        <a href="{{ url_for('logout') }}" id="logout-link">Logout</a>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.background = isError ? 'var(--error)' : 'var(--success)';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateLocation(bookingId, btn, silent = false) {
+            if (!navigator.geolocation) {
+                if (!silent) showToast("Geolocation not supported by your browser", true);
+                return;
+            }
+
+            if (!silent) {
+                btn.disabled = true;
+                btn.innerHTML = 'Updating...';
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    console.log(`Real GPS Captured: ${lat}, ${lon}`);
+
+                    fetch('/update_location', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            booking_id: bookingId,
+                            lat: lat,
+                            lon: lon
+                        }),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                if (!silent) showToast("Real location updated! (Lat: " + lat.toFixed(4) + ")");
+                            } else {
+                                if (!silent) showToast("Error: " + data.message, true);
+                            }
+                        })
+                        .catch((error) => {
+                            if (!silent) showToast("Failed to send location", true);
+                        })
+                        .finally(() => {
+                            if (!silent) {
+                                btn.disabled = false;
+                                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Update Current Location';
+                            }
+                        });
+                },
+                (error) => {
+                    if (!silent) {
+                        let msg = "Error getting location";
+                        if (error.code === 1) msg = "Location permission denied";
+                        else if (error.code === 2) msg = "Location unavailable";
+                        else if (error.code === 3) msg = "Location timeout";
+
+                        showToast(msg + ": " + error.message, true);
+                        btn.disabled = false;
+                        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Update Current Location';
+                    }
+                },
+                options
+            );
+        }
+
+        function completeDelivery(bookingId, btn) {
+            if (!confirm("Are you sure you want to mark this shipment as delivered? This will release your assigned vehicle and status.")) return;
+
+            btn.disabled = true;
+            btn.innerHTML = 'Processing...';
+
+            fetch(`/complete_delivery/${bookingId}`, {
+                method: 'POST',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showToast("Delivery completed! Refreshing...");
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showToast("Error: " + data.message, true);
+                        btn.disabled = false;
+                        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark as Delivered';
+                    }
+                })
+                .catch((error) => {
+                    showToast("Failed to complete delivery", true);
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark as Delivered';
+                });
+        }
+
+        function triggerAllUpdates() {
+            const btns = document.querySelectorAll('.update-btn');
+            btns.forEach((btn) => {
+                const id = btn.getAttribute('data-id');
+                if (id) updateLocation(id, btn, true);
+            });
+        }
+
+        // Run once immediately on load
+        triggerAllUpdates();
+
+        // Auto-update every 10 seconds for all assigned shipments
+        setInterval(triggerAllUpdates, 10000);
+    </script>
+</body>
+
+</html>

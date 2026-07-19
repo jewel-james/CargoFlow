@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card p-4 shadow-sm" style="max-width: 500px; margin: 40px auto;">
+    <h2 class="text-center mb-4">Find My Tracking ID</h2>
+    <p class="text-muted text-center mb-4">Enter your phone number or email to see all your shipments.</p>
+
+    <form action="/retrieve-tracking" method="POST" autocomplete="off">
+        <div class="mb-3">
+            <label for="search_query" class="form-label">Email or Phone Number</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="search_query" name="search_query"
+                    placeholder="Enter email or phone" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Search Shipments</button>
+    </form>
+
+    <div class="mt-4 text-center">
+        <p>Remember your Tracking ID? <a href="/track">Track directly</a></p>
+    </div>
+</div>
+{% endblock %}
