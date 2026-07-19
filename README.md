@@ -40,13 +40,14 @@ Built as a portfolio project using **Python Flask** and **SQLite**, it demonstra
 
 ## 🛠️ Technologies Used
 
-Category	Technologies
-Backend	Python 3.12, Flask
-Database	SQLite, SQLAlchemy
-Frontend	HTML5, CSS3, Jinja2
-Authentication	bcrypt
-Location Services	Browser Geolocation API
-Geocoding	OpenStreetMap Nominatim
+| Category | Technologies |
+|----------|--------------|
+| Backend | Python 3.12, Flask |
+| Database | SQLite, SQLAlchemy |
+| Frontend | HTML5, CSS3, Jinja2 |
+| Authentication | bcrypt |
+| Location Services | Browser Geolocation API |
+| Geocoding | OpenStreetMap Nominatim |
 ---
 
 ## 📁 Folder Structure
@@ -131,12 +132,14 @@ Open your browser and go to: **http://127.0.0.1:5000**
 
 ## 🔑 Default Credentials
 
+## 🔑 Demo Credentials
+
 | Role | Username | Password |
 |------|----------|----------|
-| Admin | `admin` | `admin123` |
-| Driver | `driver1` | `password123` |
+| Admin | admin | admin123 |
+| Driver | driver1 | password123 |
 
-> **Note:** Change these credentials after first login in any real deployment.
+> These credentials are provided for demonstration purposes only.
 
 ---
 
@@ -172,4 +175,6 @@ Driver Marks Delivered → Driver & Vehicle Released
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+## 📄 License
+
+This project is intended for educational and portfolio purposes.
