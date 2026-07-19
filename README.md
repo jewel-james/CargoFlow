@@ -1,4 +1,5 @@
-# 🚚 CargoFlow — Cargo Booking & Real-Time Tracking System
+# 🚚 CargoFlow
+### Smart Cargo Booking & Real-Time Tracking System
 
 CargoFlow is a full-stack web application for regional road cargo logistics. It allows users to book shipments, get instant cost estimates, and track their cargo in real time using driver GPS — all through a clean, modern web interface.
 
@@ -39,15 +40,13 @@ Built as a portfolio project using **Python Flask** and **SQLite**, it demonstra
 
 ## 🛠️ Technologies Used
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python 3.12, Flask 3.1 |
-| Database | SQLite + SQLAlchemy ORM |
-| Auth | bcrypt password hashing |
-| Frontend | HTML5, CSS3, Jinja2 templates |
-| Maps / Geocoding | OpenStreetMap Nominatim API |
-| GPS | Browser Geolocation API |
-
+Category	Technologies
+Backend	Python 3.12, Flask
+Database	SQLite, SQLAlchemy
+Frontend	HTML5, CSS3, Jinja2
+Authentication	bcrypt
+Location Services	Browser Geolocation API
+Geocoding	OpenStreetMap Nominatim
 ---
 
 ## 📁 Folder Structure
@@ -159,7 +158,7 @@ Driver Marks Delivered → Driver & Vehicle Released
 
 ---
 
-## 🚀 Future Improvements
+## 🚀Roadmap
 
 - [ ] Email/SMS notifications on booking and delivery
 - [ ] Google Maps integration for live map view
