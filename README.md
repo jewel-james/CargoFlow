@@ -91,10 +91,7 @@ cargoflow/
 ## ⚙️ Installation & Setup
 
 ### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/cargoflow.git
-cd cargoflow
-```
+git clone https://github.com/jewel-james/CargoFlow.git
 
 ### 2. Create a virtual environment (recommended)
 ```bash
